@@ -1650,7 +1650,7 @@ Snapchat --> Filters --> Templates
 20. Initially, the `Anon Template` will be in `Draft` mode by default.
 21. Hover to that template, you will see 3 dots on the right top of the template, click that and click `Enable` to enable the template.
 22. Once it is `Enabled`,  select that template and `edit` it.
-23. While editing the template, one must have to aware of the type of editing a template: ![[Running Notes#Edit modes in Template Editing]]
+23. While editing the template, one must have to aware of the type of editing a template: ![[Running-Notes#Edit modes in Template Editing]]
 24. By default, the every new template is in the `Structure` mode.
 25. Then, add any components and render the data on the web page of the template.
 26. Now create a new page in `sites` using `Create` button.
