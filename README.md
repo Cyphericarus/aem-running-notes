@@ -1,10 +1,25 @@
 # Adobe Experience Manager (AEM) Notes
 
+![GitHub last commit](https://img.shields.io/github/last-commit/Cyphericarus/aem-running-notes)
+![GitHub repo size](https://img.shields.io/github/repo-size/Cyphericarus/aem-running-notes)
+![GitHub stars](https://img.shields.io/github/stars/Cyphericarus/aem-running-notes)
+
 > A collection of my AEM learning journey, running notes, refined concepts, practical observations, and interview preparation material.
 
 This repository contains structured notes and learning materials for **Adobe Experience Manager (AEM)** and **AEM as a Cloud Service (AEMaaCS)**. The goal is simple: learn deeply, document clearly, and share knowledge with the community.
 
 Whether you're a beginner trying to understand Sling and HTL, or an experienced developer revisiting OSGi concepts, I hope these notes save you a few hours of confusion and a lot of browser tabs.
+
+## 📑 Table of Contents
+
+- [Contents](#-contents)
+- [Repository Structure](#-repository-structure)
+- [Purpose](#-purpose)
+- [Currently Working On](#-currently-working-on)
+- [Topics Covered](#-topics-covered)
+- [Author](#-author)
+- [Contributions](#-contributions)
+- [Support](#-support)
 
 ---
 
@@ -83,7 +98,7 @@ This repository serves as my personal knowledge base for:
 
 ## 🚧 Currently Working On
 
-- Completing and refining **Final-Improved-Notes**
+- Completing and refining [[Final-Improved-Notes]]
     
 - Adding deeper explanations and practical examples
     
@@ -128,6 +143,10 @@ More topics will be added as the learning journey continues.
 **Cypher Icarus**
 
 GitHub: [Cyphericarus](https://github.com/Cyphericarus/)
+
+>[!NOTE] Note
+>These notes are created while learning and practicing AEM. While every effort has been made to keep the content accurate, some sections may evolve as my understanding grows.
+
 
 ---
 
