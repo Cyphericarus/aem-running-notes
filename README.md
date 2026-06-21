@@ -144,8 +144,9 @@ More topics will be added as the learning journey continues.
 
 GitHub: [Cyphericarus](https://github.com/Cyphericarus/)
 
->[!NOTE] Note
->These notes are created while learning and practicing AEM. While every effort has been made to keep the content accurate, some sections may evolve as my understanding grows.
+### 📝 Note
+
+These notes are created while learning and practicing AEM. While every effort has been made to keep the content accurate, some sections may evolve as my understanding grows.
 
 
 ---
