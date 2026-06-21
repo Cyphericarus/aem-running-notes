@@ -3082,6 +3082,8 @@ OSGi Service Registry
 
 Used to inject the current adaptable object.
 
+Can also be used to inject another Sling Model.
+
 Example:
 
 ```java
@@ -3095,8 +3097,6 @@ or
 @Self
 private Resource resource;
 ```
-
-Can also be used to inject another Sling Model.
 
 
 ## @Reference vs @OSGiService
@@ -3123,7 +3123,7 @@ OSGi Service
 ```
 
 
-### @OSGiService
+### `@OSGiService`
 
 Used inside Sling Models.
 
@@ -3543,6 +3543,901 @@ After all injections are completed and before the model is used by HTL.
 ### One-Line Summary
 
 Sling Models convert JCR content into Java objects, apply business logic, consume services, process `multifields`, and expose data to HTL or JSON exporters.
+
+---
+# Day 17 - Sling Servlets
+[15-06-2026]
+
+## What is a Servlet?
+
+A Servlet is a Java class that receives an HTTP request, processes it, and sends an HTTP response back to the client.
+
+Flow:
+
+```text
+Browser / Postman
+        ↓
+    HTTP Request
+        ↓
+     Servlet
+        ↓
+ Business Logic
+        ↓
+   HTTP Response
+        ↓
+Browser / Postman
+```
+
+In AEM, Servlets are commonly used for:
+
+- REST APIs
+    
+- Form Submission
+    
+- AJAX Calls
+    
+- JSON Responses
+    
+- External Integrations
+    
+- CRUD Operations
+    
+
+## Why Do We Need Servlets?
+
+HTL is mainly used for rendering content.
+
+Examples:
+
+```html
+<h1>${properties.title}</h1>
+```
+
+HTL is not designed for:
+
+- Processing POST requests
+    
+- Returning JSON APIs
+    
+- Handling PUT requests
+    
+- Handling DELETE requests
+    
+- Custom Backend Endpoints
+
+For such requirements, we use Sling Servlets.
+
+## Traditional Servlet vs Sling Servlet
+
+Before understanding Sling Servlets, it is important to understand how they differ from traditional Java Servlets.
+
+### Traditional Java Servlet
+
+A Traditional Servlet is a Java class that handles HTTP requests and responses.
+
+Example:
+
+```java
+public class LoginServlet extends HttpServlet {
+}
+```
+
+Traditional Servlets are generally mapped directly to URLs.
+
+Flow:
+
+```text
+Request URL
+      ↓
+Servlet Mapping
+      ↓
+Servlet
+      ↓
+Response
+```
+
+Example:
+
+```text
+/login
+      ↓
+LoginServlet
+```
+
+Traditional Servlets are primarily URL-centric.
+
+### Sling Servlet
+
+A Sling Servlet is a Servlet managed by the Sling Framework and OSGi.
+
+Example:
+
+```java
+public class SampleServlet
+        extends SlingAllMethodsServlet {
+}
+```
+
+Unlike Traditional Servlets, Sling Servlets are designed to work with Sling Resources.
+
+Flow:
+
+```text
+Request
+    ↓
+Resource Resolution
+    ↓
+Resource Type
+    ↓
+Servlet
+    ↓
+Response
+```
+
+Sling Servlets can be registered using:
+
+1. Path
+    
+2. Resource Type
+    
+3. Selectors
+    
+4. Extensions
+    
+5. HTTP Methods
+    
+
+## Why Sling Servlets?
+
+AEM is built on Apache Sling, and Sling is a resource-centric framework.
+
+In Sling:
+
+```text
+Everything is a Resource
+```
+
+Examples:
+
+```text
+/content/newsportal/page1
+/content/dam/logo.png
+newsportal/components/header
+```
+
+Since Sling works with resources rather than URLs, Sling Servlets provide a way to process requests using Sling's resource resolution mechanism.
+
+
+## URL-Centric vs Resource-Centric
+
+### Traditional Servlet
+
+```text
+URL
+ ↓
+Servlet
+ ↓
+Response
+```
+
+Example:
+
+```text
+/login
+ ↓
+LoginServlet
+```
+
+The URL directly determines which servlet executes.
+
+
+### Sling Servlet
+
+```text
+Resource
+ ↓
+sling:resourceType
+ ↓
+Servlet
+ ↓
+Response
+```
+
+Example:
+
+```text
+/content/newsportal/page1
+
+sling:resourceType =
+newsportal/components/article
+```
+
+```java
+@SlingServletResourceTypes(
+    resourceTypes = {
+        "newsportal/components/article"
+    }
+)
+```
+
+The Resource Type determines which servlet executes.
+
+
+## Why Resource Type-Based Servlets Are Preferred
+
+Resource Type-Based Servlets follow Sling's architecture and participate in Sling's resource resolution process.
+
+Advantages:
+
+- Resource-oriented
+    
+- Reusable
+    
+- Better aligned with AEM architecture
+    
+- Easier to maintain in large projects
+    
+
+Because of this, Adobe generally recommends:
+
+```text
+Resource Type-Based Servlet
+```
+
+over
+
+```text
+Path-Based Servlet
+```
+
+whenever possible.
+
+
+## Sling Model vs Sling Servlet
+
+### Sling Model
+
+Purpose:
+
+```text
+Read Content
+Apply Business Logic
+Prepare Data For HTL
+```
+
+Flow:
+
+```text
+Resource
+    ↓
+Sling Model
+    ↓
+HTL
+```
+
+
+### Sling Servlet
+
+Purpose:
+
+```text
+Handle HTTP Requests
+Handle HTTP Responses
+Return JSON
+Process Forms
+Create APIs
+```
+
+Flow:
+
+```text
+Request
+    ↓
+Servlet
+    ↓
+Response
+```
+
+
+## One-Line Summary
+
+A Traditional Servlet is URL-centric, whereas a Sling Servlet is resource-centric and integrates with Sling's resource resolution mechanism, making it more suitable for AEM applications.
+
+
+## Types of Sling Servlets
+
+### 1. `SlingSafeMethodsServlet`
+
+Supports only safe HTTP methods:
+
+```text
+GET
+HEAD
+OPTIONS
+TRACE
+```
+
+Most commonly:
+
+```text
+GET
+```
+
+Example:
+
+```java
+public class TestServlet
+        extends SlingSafeMethodsServlet {
+}
+```
+
+Use when:
+
+```text
+Read Data Only
+```
+
+
+### 2. `SlingAllMethodsServlet`
+
+Supports:
+
+```text
+GET
+POST
+PUT
+DELETE
+```
+
+Example:
+
+```java
+public class TestServlet
+        extends SlingAllMethodsServlet {
+}
+```
+
+Use when:
+
+```text
+Create
+Update
+Delete
+Read
+```
+
+operations are required.
+
+
+## Registering a Servlet
+
+A Servlet must be registered as an OSGi Component.
+
+```java
+@Component(
+    service = Servlet.class, 
+    immediate = true
+)
+```
+
+> [!NOTE]
+> Value for the `service` must typically be `Servlet.class` for the Sling Servlets
+
+### Why?
+
+OSGi must:
+
+```text
+Create Servlet Object
+Manage Lifecycle
+Register Servlet
+```
+
+Without `@Component`, AEM cannot discover the servlet.
+
+
+## Servlet Registration Approaches
+
+There are two ways to register Sling Servlets:
+
+### 1. Path-Based Servlet
+
+Registered using:
+
+```java
+@SlingServletPaths
+```
+
+Example:
+
+```java
+@SlingServletPaths(
+    value = {
+        "/bin/newsportal/service/sample"
+    }
+)
+```
+
+URL:
+
+```text
+http://localhost:4502/bin/newsportal/service/sample
+```
+
+
+### 2. Resource Type-Based Servlet
+
+Registered using:
+
+```java
+@SlingServletResourceTypes
+```
+
+Example:
+
+```java
+@SlingServletResourceTypes(
+    resourceTypes = {
+        "newsportal/components/page"
+    }
+)
+```
+
+Triggered when Sling resolves a resource having that resource type.
+
+
+## Path-Based Servlet
+
+### Example
+
+```java
+@Component(
+    service = Servlet.class,
+    immediate = true
+)
+@SlingServletPaths(
+    value = {
+        "/bin/newsportal/service/sample"
+    }
+)
+public class SampleServlet
+        extends SlingAllMethodsServlet {
+}
+```
+
+### How It Works
+
+Request:
+
+```text
+GET /bin/newsportal/service/sample
+```
+
+Flow:
+
+```text
+Browser
+     ↓
+Servlet Resolver
+     ↓
+SampleServlet
+     ↓
+doGet()
+```
+
+
+## Sample Servlet
+
+```java
+@Component(
+    service = Servlet.class,
+    immediate = true
+)
+@SlingServletPaths(
+    value = {
+        "/bin/newsportal/service/Sample"
+    }
+)
+public class SampleServlet
+        extends SlingAllMethodsServlet {
+
+    @Override
+    protected void doGet(
+        SlingHttpServletRequest request,
+        SlingHttpServletResponse response)
+        throws ServletException, IOException {
+
+        response.getWriter().write(
+            "Response from SampleServlet -- GET"
+        );
+    }
+
+    @Override
+    protected void doPost(
+        SlingHttpServletRequest request,
+        SlingHttpServletResponse response)
+        throws ServletException, IOException {
+
+        response.getWriter().write(
+            "Response from SampleServlet -- POST"
+        );
+    }
+
+    @Override
+    protected void doPut(
+        SlingHttpServletRequest request,
+        SlingHttpServletResponse response)
+        throws ServletException, IOException {
+
+        response.getWriter().write(
+            "Response from SampleServlet -- PUT"
+        );
+    }
+
+    @Override
+    protected void doDelete(
+        SlingHttpServletRequest request,
+        SlingHttpServletResponse response)
+        throws ServletException, IOException {
+
+        response.getWriter().write(
+            "Response from SampleServlet -- DELETE"
+        );
+    }
+}
+```
+
+
+## Understanding `doGet()`
+
+```java
+@Override
+protected void doGet(
+    SlingHttpServletRequest request,
+    SlingHttpServletResponse response)
+```
+
+### request
+
+Contains data coming from the client.
+
+Examples:
+
+```java
+request.getParameter("id");
+request.getRequestPathInfo();
+request.getResource();
+```
+
+
+### response
+
+Used to send data back to the client.
+
+Example:
+
+```java
+response.getWriter().write(
+    "Hello World"
+);
+```
+
+Output:
+
+```text
+Hello World
+```
+
+
+## HTTP Methods
+
+### GET
+
+Used to retrieve data.
+
+Example:
+
+```text
+Get Article
+Get User
+Get Product
+```
+
+
+### POST
+
+Used to create data.
+
+Example:
+
+```text
+Create User
+Submit Form
+Upload Data
+```
+
+
+### PUT
+
+Used to update existing data.
+
+Example:
+
+```text
+Update User
+Update Article
+```
+
+
+### DELETE
+
+Used to remove data.
+
+Example:
+
+```text
+Delete User
+Delete Article
+```
+
+
+## Resource Type-Based Servlet
+
+### Annotation
+
+```java
+@SlingServletResourceTypes(
+    resourceTypes = {
+        "newsportal/components/test"
+    }
+)
+```
+
+Unlike Path-Based Servlets:
+
+```text
+/bin URL not required
+```
+
+### HTTP Methods in Resource Type-Based Servlets
+
+A Resource Type-Based Servlet can be restricted to specific HTTP methods using the `methods` attribute.
+
+Example:
+
+```java
+@SlingServletResourceTypes(
+    resourceTypes = {
+        "newsportal/components/test"
+    },
+    methods = {
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+    }
+)
+```
+
+#### Why use the `methods` attribute?
+
+The `methods` attribute helps Sling's Servlet Resolver determine whether the servlet is eligible to handle the incoming request.
+
+Servlet resolution is based on:
+
+```text
+Resource Type
+Selectors
+Extensions
+HTTP Method
+```
+
+When a request arrives:
+
+```text
+Incoming Request
+       ↓
+Resource Type Match
+       ↓
+Method Match
+       ↓
+Servlet Selected
+```
+
+If the HTTP method does not match, Sling may not select the servlet even though the `resourceType` matches.
+
+#### Important Observation
+
+While `SlingAllMethodsServlet` provides support for:
+
+```text
+GET
+POST
+PUT
+DELETE
+```
+
+it is recommended to explicitly specify the methods during servlet registration:
+
+```java
+methods = {
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE"
+}
+```
+
+During implementation, it was observed that the servlet did not respond until the `methods` attribute was added to `@SlingServletResourceTypes`.
+
+Therefore, for Resource Type-Based Servlets, it is considered a best practice to explicitly declare supported HTTP methods.
+
+#### GET-Only Servlet Example
+
+```java
+@SlingServletResourceTypes(
+    resourceTypes = {
+        "newsportal/components/test"
+    },
+    methods = {
+        "GET"
+    }
+)
+public class TestServlet
+        extends SlingSafeMethodsServlet {
+}
+```
+
+#### CRUD Servlet Example
+
+```java
+@SlingServletResourceTypes(
+    resourceTypes = {
+        "newsportal/components/test"
+    },
+    methods = {
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+    }
+)
+public class TestServlet
+        extends SlingAllMethodsServlet {
+}
+```
+
+#### Key Difference
+
+```text
+methods attribute
+        ↓
+Used during Servlet Resolution
+
+doGet(), doPost(), doPut(), doDelete()
+        ↓
+Executed after Servlet Selection
+```
+
+The `methods` attribute helps Sling decide whether the servlet should handle the request, while the `doXXX()` methods contain the actual business logic executed after the servlet is selected.
+
+
+### Example
+
+Suppose a node exists:
+
+```text
+/content/newsportal/test
+```
+
+Properties:
+
+```text
+sling:resourceType =
+newsportal/components/test
+```
+
+Servlet:
+
+```java
+@SlingServletResourceTypes(
+    resourceTypes = {
+        "newsportal/components/test"
+    }
+)
+```
+
+When Sling resolves that resource type, the servlet can be invoked.
+
+
+## Path-Based vs Resource Type-Based Servlet
+
+### Path-Based
+
+```java
+@SlingServletPaths(
+    "/bin/newsportal/service/sample"
+)
+```
+
+Advantages:
+
+- Easy Testing
+    
+- Direct URL Access
+    
+
+Disadvantages:
+
+- Not tied to repository resources
+    
+- Less Sling-oriented
+    
+
+### Resource Type-Based
+
+```java
+@SlingServletResourceTypes(
+    resourceTypes = {
+        "newsportal/components/test"
+    }
+)
+```
+
+Advantages:
+
+- Follows Sling Architecture
+    
+- Resource-Oriented
+    
+- Preferred Approach
+    
+
+Disadvantages:
+
+- Slightly harder to understand initially
+    
+
+## Testing Servlets
+
+### Browser
+
+GET requests:
+
+```text
+http://localhost:4502/bin/newsportal/service/sample
+```
+
+
+### Postman
+
+Supports:
+
+```text
+GET
+POST
+PUT
+DELETE
+```
+
+Useful for testing all servlet methods.
+
+
+## Important Interview Question
+
+### Why is Resource Type-Based Servlet Preferred?
+
+Because Sling is a resource-centric framework.
+
+Resource Type-Based Servlets are attached to resources and participate in Sling's resource resolution mechanism.
+
+Path-Based Servlets behave more like traditional servlet mappings.
+
+Therefore, Adobe generally recommends Resource Type-Based Servlets whenever possible.
+
+## One-Line Summary
+
+A Sling Servlet is an OSGi-managed Java class that handles HTTP requests and responses in AEM. It can be registered using either a path (`@SlingServletPaths`) or a resource type (`@SlingServletResourceTypes`) and is commonly used for APIs, form processing, AJAX calls, and backend operations.
 
 ---
 
