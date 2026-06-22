@@ -2876,7 +2876,7 @@ import org.apache.sling.servlets.annotations.SlingServletPaths;
 import org.osgi.service.component.annotations.Component;
 
 @Component(service = Servlet.class, immediate = true)
-@SlingServletPaths(value = { "/bin/newsportal/recent/articleServlet" })
+@SlingServletPaths(value = {"/bin/newsportal/recent/articleServlet"})
 public class RecentArticleServlet  extends SlingAllMethodsServlet{
 	
 	@Override
@@ -2909,9 +2909,7 @@ public class RecentArticleServlet  extends SlingAllMethodsServlet{
 			}
         	
         	 response.getWriter().write(userJsonList.build().toString());
-        }
-		
-		
+        }		
 	}
 
 	@Override
@@ -2994,8 +2992,6 @@ public class RecentArticleServlet  extends SlingAllMethodsServlet{
 ```
 
 
-
-
 ---
 # Day19 - Sling Event Handler
 [18-06-2026]
@@ -3041,6 +3037,40 @@ Establishing the connection bw the Author instance and the Publish instance thro
 	```
 
 
+## Code
+
+```java
+package com.karthik.newsportal.core.listeners;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.day.cq.replication.ReplicationAction;
+
+@Component(service = EventHandler.class,
+          property = {EventConstants.EVENT_TOPIC+"="+ReplicationAction.EVENT_TOPIC,
+          EventConstants.EVENT_FILTER+"(&(type=ACTIVATE)(path=/content/newsportal/us/en/article-details/*))"
+}
+		)
+
+public class ArticleEventHandler implements EventHandler{
+
+	private static final Logger LOG = LoggerFactory.getLogger(ArticleEventHandler.class);
+	@Override
+	public void handleEvent(Event event) {
+		LOG.info("Inside the ArticleEventHandlerKarthik........");
+		String[] Properties = event.getPropertyNames();
+		for(String Property : Properties) {
+			LOG.info("PropertyName -{} , PropertyValue - {}", Property,event.getProperty(Property));
+		}
+	}
+}
+```
+
 
 ## 
 
@@ -3049,5 +3079,5 @@ Establishing the connection bw the Author instance and the Publish instance thro
 3. Go to `sites` and activate/publish the page.
 4. Now, see the updated logs in the `error.log` file.
 
----
 
+---
