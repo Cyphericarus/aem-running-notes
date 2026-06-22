@@ -1,3 +1,4 @@
+
 # Day 13 - OSGi (Open Services Gateway Initiative)
 [08-06-2026]
 
@@ -4438,6 +4439,788 @@ Therefore, Adobe generally recommends Resource Type-Based Servlets whenever poss
 ## One-Line Summary
 
 A Sling Servlet is an OSGi-managed Java class that handles HTTP requests and responses in AEM. It can be registered using either a path (`@SlingServletPaths`) or a resource type (`@SlingServletResourceTypes`) and is commonly used for APIs, form processing, AJAX calls, and backend operations.
+
+---
+
+# Day18 - Sling Node APIs
+[17-06-2026]
+
+## What are Sling Node APIs?
+
+Everything stored in the AEM Repository (CRXDE) is represented as a **Node**.
+
+Examples:
+
+```text
+/content
+/content/dam
+/content/newsportal
+/content/newsportal/page1
+```
+
+All of the above are nodes.
+
+Sling Node APIs provide a set of Sling classes and methods that allow developers to perform CRUD operations on repository nodes programmatically without opening CRXDE.
+
+CRUD:
+
+```text
+C → Create
+R → Read (Retrieve)
+U → Update
+D → Delete
+```
+
+
+
+## Why Do We Need Sling Node APIs?
+
+Without Sling Node APIs:
+
+```text
+Developer
+    ↓
+Open CRXDE
+    ↓
+Manually Create / Update / Delete Nodes
+```
+
+With Sling Node APIs:
+
+```text
+Servlet
+Service
+Workflow
+Event Handler
+    ↓
+Repository Operations
+```
+
+can be performed through Java code.
+
+
+
+## Why is it called an API?
+
+API stands for:
+
+```text
+Application Programming Interface
+```
+
+An API is a collection of classes and methods provided by a framework to perform a specific task.
+
+Examples:
+
+```text
+Java Collections API
+JDBC API
+Servlet API
+Sling Node API
+```
+
+Sling provides ready-made classes for interacting with repository nodes:
+
+```java
+ResourceResolver
+Resource
+ValueMap
+ModifiableValueMap
+```
+
+Therefore:
+
+```text
+Sling
+   +
+Node Operations
+   +
+Provided Classes
+=
+Sling Node APIs
+```
+
+
+
+## Repository Hierarchy
+
+The relationship between the Sling Node API classes:
+
+```text
+Repository
+      ↓
+ResourceResolver
+      ↓
+Resource
+      ↓
+ValueMap
+```
+
+Reading:
+
+```text
+ResourceResolver
+        ↓
+Resource
+        ↓
+ValueMap
+```
+
+Updating:
+
+```text
+ResourceResolver
+        ↓
+Resource
+        ↓
+ModifiableValueMap
+        ↓
+commit()
+```
+
+
+
+## Core Classes of Sling Node APIs
+
+### 1. ResourceResolver
+
+The main entry point for repository access.
+
+Used to:
+
+- Read Resources
+    
+- Create Resources
+    
+- Update Resources
+    
+- Delete Resources
+    
+- Commit Changes
+    
+
+Example:
+
+```java
+ResourceResolver resolver =
+        request.getResourceResolver();
+```
+
+Think:
+
+```text
+ResourceResolver
+       ↓
+Repository Connection
+```
+
+Without a `ResourceResolver`, repository access is not possible.
+
+
+### Ways to Obtain `ResourceResolver`
+
+#### Request-Based `ResourceResolver`
+
+Uses the currently logged-in user's permissions.
+
+```java
+ResourceResolver resolver =
+        request.getResourceResolver();
+```
+
+Commonly used inside:
+
+```text
+Servlets
+Filters
+```
+
+
+#### Service `ResourceResolver` (System User)
+
+Uses a dedicated service account.
+
+Commonly used inside:
+
+```text
+OSGi Services
+Schedulers
+Event Handlers
+Workflows
+```
+
+when no request object is available.
+
+
+### 2. Resource
+
+Represents a node in the repository.
+
+Example:
+
+```java
+Resource userResource =
+    resolver.getResource("/content/users");
+```
+
+Repository:
+
+```text
+/content/users
+```
+
+↓
+
+Java:
+
+```java
+Resource userResource;
+```
+
+Think:
+
+```text
+Node
+  ↔
+Resource
+```
+
+
+
+### Why Resource Instead of Node?
+
+Old JCR approach:
+
+```java
+Node node = session.getNode(...);
+```
+
+Sling approach:
+
+```java
+Resource resource =
+resolver.getResource(...);
+```
+
+Adobe recommends using:
+
+```text
+Resource
+```
+
+because Sling is:
+
+```text
+Resource-Oriented
+```
+
+rather than:
+
+```text
+JCR-Oriented
+```
+
+
+
+### Common Resource Methods
+
+#### Get Resource
+
+```java
+resolver.getResource(path);
+```
+
+Example:
+
+```java
+Resource user =
+resolver.getResource("/content/users");
+```
+
+
+
+#### Get Child Resources
+
+```java
+resource.listChildren();
+```
+
+Example:
+
+```java
+Iterator<Resource> children =
+        user.listChildren();
+```
+
+
+### 3. ValueMap
+
+Used to read properties from a Resource.
+
+Repository:
+
+```text
+user1
+ ├── firstName = Karthik
+ ├── lastName  = Kumar
+ └── email     = abc@gmail.com
+```
+
+Read Properties:
+
+```java
+ValueMap properties =
+        userResource.getValueMap();
+```
+
+```java
+String firstName =
+        properties.get(
+            "firstName",
+            String.class
+        );
+```
+
+Think:
+
+```text
+Resource
+    ↓
+ValueMap
+    ↓
+Read Properties
+```
+
+
+
+### 4. ModifiableValueMap
+
+Used to modify properties of an existing Resource.
+
+Example:
+
+```java
+ModifiableValueMap mProp =
+    userResource.adaptTo(
+        ModifiableValueMap.class
+    );
+```
+
+Update:
+
+```java
+mProp.put(
+    "firstName",
+    "Karthik"
+);
+```
+
+Persist:
+
+```java
+resolver.commit();
+```
+
+Think:
+
+```text
+ValueMap
+      ↓
+Read Only
+
+ModifiableValueMap
+      ↓
+Read + Update
+```
+
+
+
+## Adaptation in Sling Node APIs
+
+We have already seen adaptation in Sling Models.
+
+The same concept appears here.
+
+Example:
+
+```java
+ModifiableValueMap mProp =
+    userResource.adaptTo(
+        ModifiableValueMap.class
+    );
+```
+
+Meaning:
+
+```text
+Resource
+     ↓ adaptTo()
+ModifiableValueMap
+```
+
+We are asking Sling:
+
+```text
+Convert this Resource
+into a ModifiableValueMap view
+so that I can modify properties.
+```
+
+
+## CRUD Operations using Sling Node APIs
+
+### CREATE (POST)
+
+Creates a new node.
+
+```java
+ResourceResolver resolver =
+        request.getResourceResolver();
+
+Resource userResource =
+        resolver.getResource("/content/users");
+
+String userID =
+        request.getParameter("userID");
+
+Map<String, Object> properties =
+        new HashMap<>();
+
+properties.put(
+        "firstName",
+        request.getParameter("firstName"));
+
+properties.put(
+        "lastName",
+        request.getParameter("lastName"));
+
+properties.put(
+        "email",
+        request.getParameter("email"));
+
+properties.put(
+        "phone",
+        request.getParameter("phone"));
+
+resolver.create(
+        userResource,
+        userID,
+        properties);
+
+resolver.commit();
+```
+
+### READ (GET)
+
+Reads existing nodes and returns data.
+
+```java
+ResourceResolver resolver =
+        request.getResourceResolver();
+
+Resource userResource =
+        resolver.getResource("/content/users");
+
+Iterator<Resource> userChildList =
+        userResource.listChildren();
+
+while(userChildList.hasNext()) {
+
+    Resource childUserResource =
+            userChildList.next();
+
+    ValueMap properties =
+            childUserResource.getValueMap();
+
+    String firstName =
+            properties.get(
+                    "firstName",
+                    String.class);
+}
+```
+
+
+### UPDATE (PUT)
+
+Updates existing node properties.
+
+```java
+ResourceResolver resolver =
+        request.getResourceResolver();
+
+Resource userResource =
+        resolver.getResource(
+            "/content/users/" + userID);
+
+ModifiableValueMap mProp =
+        userResource.adaptTo(
+            ModifiableValueMap.class);
+
+mProp.put(
+        "firstName",
+        firstName);
+
+mProp.put(
+        "lastName",
+        lastName);
+
+resolver.commit();
+```
+
+
+### DELETE (DELETE)
+
+Deletes an existing node.
+
+```java
+ResourceResolver resolver =
+        request.getResourceResolver();
+
+Resource userResource =
+        resolver.getResource(
+            "/content/users/" + userID);
+
+resolver.delete(userResource);
+
+resolver.commit();
+```
+
+
+## Why commit() is Required
+
+Operations such as:
+
+```java
+create()
+delete()
+put()
+```
+
+modify only the in-memory state.
+
+Changes become permanent only after:
+
+```java
+resolver.commit();
+```
+
+Think:
+
+```text
+SQL
+ ↓
+COMMIT
+
+Sling
+ ↓
+resolver.commit()
+```
+
+Without:
+
+```java
+resolver.commit();
+```
+
+changes will not be persisted to the repository.
+
+
+
+## Complete CRUD Flow
+
+### Read Data
+
+```text
+ResourceResolver
+        ↓
+Resource
+        ↓
+ValueMap
+        ↓
+Properties
+```
+
+### Update Data
+
+```text
+ResourceResolver
+        ↓
+Resource
+        ↓
+ModifiableValueMap
+        ↓
+put()
+        ↓
+commit()
+```
+
+### Create Data
+
+```text
+ResourceResolver
+        ↓
+Parent Resource
+        ↓
+create()
+        ↓
+commit()
+```
+
+### Delete Data
+
+```text
+ResourceResolver
+        ↓
+Resource
+        ↓
+delete()
+        ↓
+commit()
+```
+
+## Full Working Code
+
+```Java
+package com.karthik.newsportal.core.servlets;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.*;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.servlets.annotations.SlingServletPaths;
+import org.osgi.service.component.annotations.Component;
+
+@SuppressWarnings("serial")
+@Component(service = Servlet.class, immediate = true)
+@SlingServletPaths(value = { "/bin/newsportal/recent/nodeServletCrud" })
+public class NodeServletCrud extends SlingAllMethodsServlet {
+
+	@Override
+	protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
+			throws ServletException, IOException {
+
+		ResourceResolver resolver = request.getResourceResolver(); 
+		Resource userResource = resolver.getResource("/content/users"); 
+
+		if (userResource != null) {
+			Iterator<Resource> userChildList = userResource.listChildren();
+			JsonArrayBuilder userJsonList = Json.createArrayBuilder();
+
+			while (userChildList.hasNext()) {
+				Resource childUserResource = (Resource) userChildList.next(); 
+
+				ValueMap properties = childUserResource.getValueMap();
+				String firstName = properties.get("firstName", String.class);
+				String lastName = properties.get("lastName", String.class);
+				String email = properties.get("email", String.class);
+				String phone = properties.get("phone", String.class);
+
+				JsonObjectBuilder userJson = Json.createObjectBuilder();
+
+				userJson.add("firstName", firstName);
+				userJson.add("lastName", lastName);
+				userJson.add("email", email);
+				userJson.add("phone", phone);
+				userJsonList.add(userJson);
+			}
+			response.getWriter().write(userJsonList.build().toString());
+		}
+	}
+
+	@Override
+	protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
+			throws ServletException, IOException {
+
+		ResourceResolver resolver = request.getResourceResolver();
+		Resource userResource = resolver.getResource("/content/users");
+
+		String userID = request.getParameter("userID");
+
+		Map<String, Object> properties = new HashMap<>();
+		properties.put("firstName", request.getParameter("firstName"));
+		properties.put("lastName", request.getParameter("lastName"));
+		properties.put("email", request.getParameter("email"));
+		properties.put("phone", request.getParameter("phone"));
+
+		resolver.create(userResource, userID, properties);
+		resolver.commit();
+		response.getWriter().write("User ID successfully Created " + userID);
+	}
+
+	@Override
+	protected void doPut(SlingHttpServletRequest request, SlingHttpServletResponse response)
+			throws ServletException, IOException {
+
+		String userID = request.getParameter("userID");
+
+		ResourceResolver resolver = request.getResourceResolver();
+		Resource userResource = resolver.getResource("/content/users/" + userID);
+
+		if (userResource != null) {
+
+			ModifiableValueMap mProp = userResource.adaptTo(ModifiableValueMap.class);
+
+			String firstName = request.getParameter("firstName");
+			String lastName = request.getParameter("lastName");
+			String email = request.getParameter("email");
+			String phone = request.getParameter("phone");
+
+			if (firstName != null) {
+
+				mProp.put("firstName", firstName);
+			}
+			if (lastName != null) {
+
+				mProp.put("lastName", lastName);
+			}
+			if (email != null) {
+
+				mProp.put("email", email);
+			}
+			if (phone != null) {
+
+				mProp.put("phone", phone);
+			}
+			resolver.commit();
+			response.getWriter().write("UserID successfully Updated " + userID);
+		} else {
+
+			response.getWriter().write("UserID not found..");
+		}
+	}
+
+	@Override
+	protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response)
+			throws ServletException, IOException {
+
+		String userID = request.getParameter("userID");
+
+		ResourceResolver resolver = request.getResourceResolver();
+		Resource userResource = resolver.getResource("/content/users/" + userID);
+		resolver.delete(userResource);
+		resolver.commit();
+
+		response.getWriter().write("UserID successfully Deleted " + userID);
+	}
+}
+
+```
+
+## One-Line Summary
+
+Sling Node APIs provide a resource-oriented way to perform CRUD operations on the AEM repository using `ResourceResolver`, `Resource`, `ValueMap`, and `ModifiableValueMap`, allowing Java code to create, read, update, and delete repository content programmatically.
+
 
 ---
 
