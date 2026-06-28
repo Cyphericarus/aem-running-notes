@@ -59,7 +59,7 @@ mvn clean install -PautoInstallSinglePackage
 14. Dispatcher & AEM Interview Concepts/Questions
 
 ---
-# Day1 - CMS& AEM
+z# Day1 - CMS& AEM
 [14/05/26]
 ## 1. The Problem — Why CMS Exists
 
@@ -3081,3 +3081,478 @@ public class ArticleEventHandler implements EventHandler{
 
 
 ---
+# Day20 - Sling Schedulers
+[23-06-2026]
+
+It's a background service which let's you run a piece of code automatically at a specific intervals of the time.
+
+
+### Schedule:
+Setting up a specific time for an event to be happened automatically.
+
+**Example:**
+1. Publishing a Republic day banner on the Jan 26th at 12:00 AM.
+
+## Uses/Purpose:
+
+- Automatically publishing / Unpublishing content at specific Time.
+- Cleaning the old Workflows
+- Sending daily reports
+- Syncing data from an external API's.
+
+## Cron Expression
+
+Its a string that defines when and how often should a Scheduled Job should run.
+
+Its a time-based job trigger.
+
+### Format
+
+``` text
+* * * * * * *
+```
+
+#### Each Above Star Represents
+```
+* -- Seconds - (0 - 59)
+* -- Minutes - (0 - 59)
+* -- Hours - (0 - 23)
+* -- Day of the Month  - (1 - 31)
+* -- Month - (1 - 12)
+* -- Day Of the week - (1 - 7)
+* -- Year 
+```
+
+## Scenarios
+
+### 1. A sling model should be run everyday at 12:00 AM
+
+```text
+0 0 0 * * *
+```
+
+
+### 2. If job should be run by every 5 mins
+
+```text
+* */5 * * * * 
+```
+
+### 3. If job should be run every 5 mins in a specific months on a specific days
+
+```text
+* */5 * * JAN, MAR, NOV MON, TUE, SAT
+```
+
+### `?` Symbol
+
+Used when a a time event is OPTIONAL
+
+```text
+* */5 * ? * * -- > Optional
+```
+
+## How to create a Sling Scheduler
+
+Step 1: Existing package called **schedulers**.
+
+Step 2: Create a class/
+
+Step 3: Convert a class into OSGI component & service.
+
+Step 4: You must have to implement the **Runnable** interface
+
+Step 5: Must implement all unimplemented methods.
+
+
+### How to use `ResourceResolver` 
+
+1. Using `request.getResourceResolver()
+2. System User
+
+#### Creating `System User`
+
+Step 1:- localhost:4502/crx/explorer
+
+Step 2:- Login 
+
+Step 3:- User Administration 
+
+Step 4:- System User 
+
+Step 5:- Create a User ID 
+
+Step 6:- localhost:4502/useradmin
+
+Step 7:- Update the User mapper Configuration 
+
+http://localhost:4502/system/console/configMgr
+
+Step 8:- user mapper
+
+Apache Sling Service User Mapper Service Amendment
+
+Step 9:- Open that tab:-
+
+newsportal.core:subservicename=servicename-->user
+
+
+## Program for System User
+
+```java
+package com.karthik.newsportal.core.servicesImp;
+
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import java.util.*;
+
+@Component(service = KarthikRes.class)
+public class KarthikRes {
+	
+	@Reference
+	ResourceResolverFactory factory;
+	
+	public ResourceResolver getResourceResolver() {
+		ResourceResolver resolver = null;
+		
+		try {
+			
+			Map<String,Object> prop = new HashMap();
+			prop.put(ResourceResolverFactory.SUBSERVICE, "eHandler");
+			resolver = factory.getServiceResourceResolver(prop);
+		}
+		catch(org.apache.sling.api.resource.LoginException e) {
+			e.printStackTrace();
+			
+		}
+		
+		
+		return resolver;
+	}
+
+}
+```
+
+
+
+## Program on Sling Schedulers
+
+
+```Java
+package com.karthik.newsportal.core.schedulers;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.day.cq.replication.ReplicationActionType;
+import com.day.cq.replication.ReplicationException;
+import com.day.cq.replication.Replicator;
+import com.day.cq.wcm.api.Page;
+import com.day.cq.wcm.api.PageManager;
+import com.karthik.newsportal.core.servicesImp.KarthikRes;
+
+import java.util.Date;
+import java.util.Iterator;
+
+import javax.jcr.Session;
+
+@Component(immediate = true, service = Runnable.class, property = { "scheduler.expression = */30 * * ? * * " })
+public class Test implements Runnable {
+
+    private static final Logger log = LoggerFactory.getLogger(Test.class);
+
+    @Reference
+    KarthikRes karthik;
+
+    @Reference
+    Replicator replicator;
+
+    @Override
+    public void run() {
+        log.info("I am Inside the Sling schedulers...--RajuScheduler");
+
+        try (ResourceResolver resolver = karthik.getResourceResolver()) {
+            PageManager pagemanager = resolver.adaptTo(PageManager.class);
+            Page articlepage = pagemanager.getPage("/content/newsportal/us/en/article-details");
+            Iterator<Page> childpages = articlepage.listChildren();
+            while (childpages.hasNext()) {
+                Page page = (Page) childpages.next();
+                Resource contentResource = page.getContentResource();
+                ValueMap properties = contentResource.getValueMap();
+                Date articleExpiry = properties.get("articleExpiry", Date.class);
+                Date today = new Date();
+                if (articleExpiry != null && articleExpiry.compareTo(today) < 0) {
+                    Session session = resolver.adaptTo(Session.class);
+                    replicator.replicate(session, ReplicationActionType.DEACTIVATE, page.getPath());
+                } 
+
+            } 
+        }
+
+        catch (ReplicationException e) {
+            e.printStackTrace();
+        } 
+    }
+
+}
+```
+
+
+
+Step1:- Write a program
+Step 2:- Deploy the program
+Step 3:- CRXDE --> /content/newsportal/us/en/article-details -->jcr:content 
+Step 4:- Add the property --> `articleExpiry` -->Date --> Yesterday
+Step 5:- Error.log and erase the log and reopen the file.
+
+---
+
+# Day21 - Query Builder
+[24-06-2026]
+
+Used to filter the JCR repository 
+
+1. **x-path** - Uses the query builder for the implementation. (older approach)
+2. **SQL-2** - Used to search and filter the content in the JCR. (latest approach)
+
+**URL:** `localhost:4502/libs/cq/search/content/querydebug.html/`
+
+- `predicates`  means `condition`
+
+## Examples using `x-path` 
+
+1. `type = cq:Page` - Used to search all the pages in the AEM.
+2. Used to get all the paths of the above pages:
+```
+type = cq:Page
+p.limt = -1
+```
+
+3. Used to get 30 pages
+```
+type = cq:Page
+p.limt = 30
+```
+
+4. Used to get the pages from 31 to 40 pages
+```
+type = cq:Page
+p.offset = 30
+p.limt = 10
+```
+
+5. Get pages in all pages with paths in `/content/newsportal`
+```
+type = cq:Page
+path=/content/newsportal
+p.limit = -1
+```
+
+6. Get a particular page with a particular template
+```
+type = cq:Page
+path = /content/newsportal
+property = jcr:content/cq:template
+property.value = /conf/newsportal/settings/wcm/templates/raju
+p.limit = -1
+```
+
+7. Get by order
+```
+...
+orderby=@jcr:content/jcr:created
+// orderby.sort = desc
+..
+```
+
+8. Get date range
+```
+daterange.property = jcr:content/jcr:jcr:created
+daterange.lowerbound = 2026-06-15T12:19:25.641+05:30
+daterange.upperbound = 2026-06-18T12:19:25.641+05:30
+```
+
+**Date format:** `2026-06-18T12:19:25.641+05:30`
+
+9.  Get any node or resource that contains `raju` from JCR
+```
+type=cq:Page
+fulltext=raju
+p.limit=-1
+```
+
+### Predicates used so far
+
+```
+type
+path
+p.limit
+p.offset
+property
+property.value
+orderby
+orderby.sort 
+daterange.property
+daterange.lowerbound
+daterange.upperbound
+fulltext
+
+```
+
+### Grouping
+
+**Ex:**
+```
+group. 1_property=
+group. 1_property. value=
+group. 2_property=
+group. 2_property. value=
+```
+
+## SQL-2
+
+
+SQL-2 -> X-path ->
+
+SELECT * FROM [cq:Page] AS s WHERE ISDESCENDANTNODE([/content/newsportal])
+
+![ssx](https://iili.io/CA3RiKP.png)
+
+
+
+
+---
+
+# Day22 - AEM Run Modes
+[25-06-2026]
+
+There are separate modes to run instance with different credentials like developer, publisher etc.
+
+### There are **two** types of run modes:
+
+## 1. Installation Run Mode : --> Standard / Primary / Installation / OOTB Run Mode
+
+- author Instance
+- publish instance
+- samplecontent
+- nosamplecontent
+- AEM 6.5 -- WKND
+- AEMaaCS
+
+#### Four Combinations
+
+1. author, samplecontent
+2. author, nosamplecontent
+3. publish, samplecontent
+4. publish, nosamplecontent
+
+**Command:** 
+
+```bash
+java -jar aem-author-p4502.jar -r samplecontent
+```
+
+
+## 2. Custom Run Modes
+
+1. dev
+2. qa
+3. stage
+4. prod
+5. preprod
+6. uat
+7. sit
+8. live
+
+### Developer Combinations
+
+1. author, dev
+2. publish, dev
+3. ....
+4. author, qa
+5. publish, qa
+
+### Environments
+
+```
+config.author.dev
+config.publish.dev
+config.dev
+config
+config.author
+config.publish
+```
+
+It follows a specific priority order to fetch a particular API URL:
+
+For `author`:
+1. First, it checks in `config.author.dev`
+2. It's not there then, it checks in  `config.author`
+3. Likewise, `config.dev`
+4. Then, `config`
+5. Finally, default values.
+
+For `publiish`:
+1. First, it checks in `config.publish.dev`
+2. It's not there then, it checks in  `config.publish
+3. Likewise, `config.dev`
+4. Then, `config`
+5. Finally, default values.
+
+#### Commands
+
+**Approach 1:**
+
+```bash
+-Dsling.run.modes=dev
+
+java -jar aem-author-p4502.jar -Dsling.run.modes=dev
+```
+
+**Approach 2:**
+
+```
+
+crx-quickstart -> conf -> sling.properties -> add `sling.run.modes=dev` in the sling.properties file -> save
+```
+
+**Approach 3:** 
+
+```bash
+java -jar aem-author-p4502.jar -r dev
+```
+
+##### Testing Purpose
+
+```bash
+java -jar aem-author-p4502.jar -Dsling.run.modes=dev
+
+```
+
+After running above command, then check in `sling settings` in `cfgMgr`,  **dev** will be found there.
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
