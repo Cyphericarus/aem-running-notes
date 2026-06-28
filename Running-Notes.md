@@ -59,7 +59,7 @@ mvn clean install -PautoInstallSinglePackage
 14. Dispatcher & AEM Interview Concepts/Questions
 
 ---
-z# Day1 - CMS& AEM
+# Day1 - CMS& AEM
 [14/05/26]
 ## 1. The Problem — Why CMS Exists
 
@@ -1590,19 +1590,9 @@ Structure
 [20-05-2026]
 
 
-
-Assignment
-
-
----
-
-# Day 
-[21-05-2026]
-
-
 ### `sling:resourceSuperType`
 
-If we want to inherit a parent component, we use the above property
+If we want to inherit a parent component properties, we use the above property
 
 
 
@@ -3156,7 +3146,7 @@ Used when a a time event is OPTIONAL
 
 Step 1: Existing package called **schedulers**.
 
-Step 2: Create a class/
+Step 2: Create a class
 
 Step 3: Convert a class into OSGI component & service.
 
@@ -3172,7 +3162,7 @@ Step 5: Must implement all unimplemented methods.
 
 #### Creating `System User`
 
-Step 1:- localhost:4502/crx/explorer
+Step 1:- `localhost:4502/crx/explorer`
 
 Step 2:- Login 
 
@@ -3182,7 +3172,7 @@ Step 4:- System User
 
 Step 5:- Create a User ID 
 
-Step 6:- localhost:4502/useradmin
+Step 6:- `localhost:4502/useradmin`
 
 Step 7:- Update the User mapper Configuration 
 
@@ -3194,7 +3184,7 @@ Apache Sling Service User Mapper Service Amendment
 
 Step 9:- Open that tab:-
 
-newsportal.core:subservicename=servicename-->user
+`newsportal.core:subservicename=servicename`-->user
 
 
 ## Program for System User
@@ -3540,19 +3530,751 @@ After running above command, then check in `sling settings` in `cfgMgr`,  **dev*
 
 ---
 
+# Day23 - Core Components & Style System
+**[26-06-2026]**
+
+## Core Components
+
+Core Components are Adobe's **pre-built reusable components**.
+
+They follow AEM best practices and are recommended for new projects.
+
+Examples
+
+- Title
+    
+- Text
+    
+- Image
+    
+- Button
+    
+- List
+    
+- Carousel
+    
+- Teaser
+    
+- Accordion
+    
+
+Instead of creating these components from scratch, we can reuse and customize them.
 
 
 
+### OOTB (Out Of The Box) Components
+
+OOTB Components are the components provided by Adobe by default.
+
+No need to create them manually.
+
+
+### Component Evolution
+
+#### 1. Foundation Components
+
+**Path**
+
+```text
+/libs/foundation/components
+```
+
+**Technology**
+
+- JSP
+    
+- Classic Dialog
+    
+- WCMUsePojo
+    
+
+> Older implementation. Not recommended for new development.
 
 
 
+#### 2. WCM Foundation Components
+
+**Path**
+
+```text
+/libs/wcm/foundation/components
+```
+
+**Technology**
+
+- HTL
+    
+- Classic UI / Touch UI Dialog
+    
+- WCMUsePojo
+    
+
+> Better than Foundation Components, but still considered legacy.
+
+
+#### 3. Core Components
+
+**Path**
+
+```text
+/libs/core/wcm/components
+```
+
+This is the standard path used in **AEM as a Cloud Service (AEMaaCS).**
+
+**Technology**
+
+- HTL
+    
+- Sling Models
+    
+- Touch UI
+    
+- Style System
+    
+- Editable Templates
+    
+
+> This is the recommended approach for modern AEM projects.
+
+
+### Coral UI Components
+
+Coral UI provides ready-made UI elements used inside AEM dialogs.
+
+Example Path
+
+```text
+/libs/coral/foundation/ui/
+```
+
+Example
+
+```text
+/libs/granite/ui/components/coral/foundation/form/textfield
+```
+
+This represents a **Text Field** used in Touch UI dialogs.
 
 
 
+### Component Comparison
+
+|Foundation|WCM Foundation|Core Components|
+|---|---|---|
+|JSP|HTL|HTL|
+|Classic Dialog|Classic + Touch UI|Touch UI|
+|WCMUsePojo|WCMUsePojo|Sling Models|
+|Legacy|Legacy|Recommended|
 
 
 
+#### Classic UI vs Touch UI
+
+#### Classic UI
+
+- Old User Interface
+    
+- ExtJS based
+    
+- Used in older AEM versions
+    
+- Not recommended
+    
 
 
 
+#### Touch UI
+
+- Modern UI
+    
+- Coral UI based
+    
+- Responsive
+    
+- Used in AEM 6.x and AEMaaCS
+    
+
+> Modern AEM development uses **Touch UI**.
+
+
+
+## Style System
+
+Style System allows Authors to apply different CSS styles **without changing the component code.**
+
+One component can have multiple visual appearances.
+
+
+### Example
+
+Title Component
+
+Author can choose
+
+- Red
+    
+- Green
+    
+- Blue
+    
+- Orange
+    
+
+without creating multiple Title components.
+
+
+### Enabling Style System
+### Step 1
+
+Copy
+
+```text
+cq:design_dialog
+```
+
+from
+
+```text
+/libs/core/wcm/components/title/v3/title
+```
+
+Paste it into your custom component.
+
+
+
+#### Step 2
+
+Open
+
+**Template Editor**
+
+↓
+
+Select your component
+
+↓
+
+Open **Policies**
+
+↓
+
+Configure the available styles.
+
+
+#### CSS Example
+
+```css
+.redd{
+    color:red;
+    text-align:center;
+    background:black;
+}
+
+.greenn{
+    color:green;
+    text-align:center;
+    background:black;
+}
+
+.bluee{
+    color:blue;
+    text-align:center;
+    background:black;
+}
+
+.yelloww{
+    color:yellow;
+    text-align:center;
+    background:black;
+}
+
+.pinkk{
+    color:pink;
+    text-align:center;
+    background:black;
+}
+
+.orangee{
+    color:orange;
+    text-align:center;
+    background:black;
+}
+```
+
+Each CSS class becomes a selectable style inside the Style System.
+
+
+
+### Useful URL
+
+AEM Core Components Playground
+
+```text
+https://www.aemcomponents.dev/
+```
+
+Use this website to
+
+- Explore Core Components
+    
+- View component examples
+    
+- Check dialogs
+    
+- Understand authoring behavior
+    
+- Learn recommended implementation
+    
+---
+
+# Day24 - User Management, Workflow & Dispatcher
+
+**[26-06-2026]**
+
+## 1. User Management
+
+User Management is used to create and manage:
+
+- Users
+    
+- Groups
+    
+- Permissions
+    
+- Roles
+    
+
+### Example
+
+Suppose a company has **30 employees** working in AEM.
+
+```
+2  -> Admins
+18 -> AEM Developers
+5  -> QA(Testers)
+5  -> Content Authors
+```
+
+Instead of assigning permissions to every user individually, we create **Groups**.
+
+Example:
+
+```
+Admin Group
+ ├── User 1
+ └── User 2
+
+Developer Group 1
+ ├── 9 Users
+
+Developer Group 2
+ ├── 9 Users
+
+QA Group
+ ├── 5 Users
+
+Content Group
+ ├── 5 Users
+```
+
+Then permissions are assigned to the **Group**, not to individual users.
+
+If a new developer joins,
+
+Just add the user to the Developer Group.
+
+No need to assign permissions again.
+
+### Access User Management
+
+```
+http://localhost:4502/useradmin
+```
+
+### Common Roles
+
+```
+Admin
+↓
+
+Team Lead
+↓
+
+Developers
+↓
+
+Content Authors
+↓
+
+QA(Testers)
+```
+
+
+## 2. Workflow
+
+Workflow means
+
+> **A step-by-step process to complete a task automatically or with approvals.**
+
+
+### Real-life Example
+
+Chocolate Manufacturing
+
+```
+Collect Seeds
+      ↓
+Prepare Chocolate
+      ↓
+Packing
+      ↓
+Transport
+      ↓
+Delivered to Vendors
+```
+
+Every step must be completed before moving to the next step.
+
+
+### AEM Workflow Example
+
+Publishing a Page
+
+```
+Developer
+↓
+UI / Frontend Team
+↓
+QA Testing
+↓
+Pre-Production Team
+↓
+Production
+↓
+Page Published
+```
+
+### Explanation
+
+**Step 1**
+
+Developers check
+
+- Components
+    
+- Backend Logic
+    
+- Functionality
+    
+
+↓
+
+**Step 2**
+
+Frontend Team checks
+
+- HTML
+    
+- CSS
+    
+- JavaScript
+    
+- Responsive Design
+    
+
+↓
+
+**Step 3**
+
+QA Team
+
+- Testing
+    
+- Bug Verification
+    
+
+↓
+
+**Step 4**
+
+Pre-Production
+
+Final verification before going live.
+
+↓
+
+**Step 5**
+
+Production
+
+Page is published to Live Server.
+
+
+### Typical Workflow Stages
+
+```
+Start
+↓
+
+Review
+↓
+
+Approve
+↓
+
+Activation (Publish)
+↓
+
+End
+```
+
+
+### Workflow Uses
+
+- Content Approval
+    
+- Page Publishing
+    
+- Asset Approval
+    
+- Automatic Notifications
+    
+- Business Approval Process
+    
+
+
+## 3. Dispatcher
+
+Dispatcher is a combination of
+
+- Load Balancer
+    
+- Cache
+    
+- Security Layer
+    
+
+It sits between
+
+```
+Client
+
+↓
+
+Dispatcher
+
+↓
+
+AEM Publish Instance
+```
+
+Instead of every request going to AEM,
+
+Dispatcher serves cached content whenever possible.
+
+This makes the website much faster.
+
+
+### Request Flow
+
+```
+Browser
+
+↓
+
+DNS
+(Domain Name Server)
+
+↓
+
+CDN
+(Content Delivery Network)
+
+↓
+
+Dispatcher
+
+↓
+
+AEM Publish Server
+
+↓
+
+Response
+```
+
+### Example
+
+User opens
+
+```
+www.flipkart.com
+```
+
+Flow becomes
+
+```
+Browser
+
+↓
+
+DNS
+
+↓
+
+CDN
+
+↓
+
+Dispatcher
+
+↓
+
+AEM Publish
+
+↓
+
+Page Returned
+```
+
+
+### Real-life Example
+
+#### Movie Theatre
+
+Whether your ticket costs
+
+```
+₹100
+
+or
+
+₹1000
+```
+
+Everyone watches the same movie.
+
+Similarly,
+
+When many users open the same page,
+
+Dispatcher serves the same cached page instead of asking AEM repeatedly.
+
+
+#### Another Example
+
+Buying a Flat
+
+```
+Customer
+
+↓
+
+Broker
+
+↓
+
+Owner
+```
+
+Mapping in AEM
+
+```
+Client
+
+↓
+
+Dispatcher (Broker)
+
+↓
+
+AEM Publish Server (Owner)
+```
+
+Dispatcher communicates with AEM and returns the response to users.
+
+
+### Advantages of Dispatcher
+
+#### 1. Content Caching
+
+Frequently requested pages are stored in cache.
+
+Result
+
+- Faster page loading
+    
+- Reduced server load
+    
+
+#### 2. Security
+
+Dispatcher can
+
+- Allow requests
+    
+- Deny requests
+    
+- Block unwanted URLs
+    
+
+It protects the Publish instance from direct access.
+
+#### 3. Load Balancing
+
+If multiple Publish servers exist,
+
+Dispatcher distributes requests among them.
+
+This improves
+
+- Performance
+    
+- High Availability
+    
+
+### Dispatcher Configuration
+
+Common configuration files
+
+```
+conf/
+
+dispatcher.d/
+
+dispatcher.any
+```
+
+
+### Allow and Deny Rules
+
+Example
+
+```
+deny
+
+/content/newsportal
+```
+
+Blocks access.
+
+Example
+
+```
+allow
+
+/content/newsportal/us/en/march-aem/page-1.html
+```
+
+Allows only that page.
+
+
+### Tools Used for Dispatcher
+
+- Docker
+    
+- Fiddler Classic
+    
+----
 
